@@ -4,6 +4,18 @@ import { MessageRequest } from '../types/messageRequest';
 import { escapeInput } from '../utils/escapeInput';
 import { exec } from 'child_process';
 
+// Liste des numéros de destinataires définis dans l'API
+const destinationPhoneNumbers = [
+  '243853942026', // Exemple de numéro 1
+  '243906081920', // Exemple de numéro 2
+  '243997300169',
+  '243820076004', // Exemple de numéro 3
+  // Ajoutez d'autres numéros selon vos besoins
+];
+
+// Numéro Signal défini dans l'API
+const phoneNumber = '243819875159'; // Exemple de numéro source
+
 export const sendMessage = async (req: Request, res: Response): Promise<void> => {
   const { message } = req.body; // Ne prendre que le message, les numéros sont gérés côté API
 
@@ -21,25 +33,34 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
   // Transformer le message en chaîne sécurisée
   const escapedMessage = escapeInput(message);
 
-  // Définir le numéro de téléphone source et destination dans l'API
-  const phoneNumber = '243819875159'; // Exemple de numéro source
-  const destinationPhoneNumber = '243853942026'; // Exemple de numéro de destination
+  // Fonction pour envoyer un message à un destinataire
+  const sendToPhoneNumber = (destinationPhoneNumber: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      // Construire la commande pour chaque destinataire
+      const command = `wsl signal-cli -u +${phoneNumber} send +${destinationPhoneNumber} -m "${escapedMessage}"`;
 
-  // Construire la commande
-  const command = `wsl signal-cli -u +${phoneNumber} send +${destinationPhoneNumber} -m "${escapedMessage}"`;
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          reject(`Erreur d'exécution: ${error.message}`);
+        }
+        if (stderr) {
+          reject(`Stderr: ${stderr}`);
+        }
+        resolve(stdout);
+      });
+    });
+  };
 
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Exec error:', error.message);
-      res.status(500).json({ error: `Exec error: ${error.message}` });
-      return;
-    }
-    if (stderr) {
-      console.error('Stderr:', stderr);
-      res.status(500).json({ error: `stderr: ${stderr}` });
-      return;
-    }
-    console.log('Command output:', stdout);
-    res.status(200).json({ message: 'Message sent', data: stdout });
-  });
+  // Envoyer le message à tous les numéros de la liste
+  try {
+    const sendPromises = destinationPhoneNumbers.map((destinationPhoneNumber: string) => sendToPhoneNumber(destinationPhoneNumber));
+    const results = await Promise.all(sendPromises);
+
+    // Répondre lorsque tous les messages ont été envoyés
+    res.status(200).json({ message: 'Messages envoyés avec succès', data: results });
+  } catch (error) {
+    // Si une erreur se produit pour l'un des numéros, retourner une erreur
+    console.error('Erreur lors de l\'envoi des messages:', error);
+    res.status(500).json({ error: `Erreur lors de l'envoi des messages: ${error}` });
+  }
 };
