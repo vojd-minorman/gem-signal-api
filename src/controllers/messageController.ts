@@ -6,15 +6,15 @@ import { exec } from 'child_process';
 
 // Liste des numéros de destinataires définis dans l'API
 const destinationPhoneNumbers = [
-  '243853942026', // Exemple de numéro 1
-  '243906081920', // Exemple de numéro 2
-  '243997300169',
-  '243820076004', // Exemple de numéro 3
+  '240853942020', // Exemple de numéro 1
+  '240906081920', // Exemple de numéro 2
+  '240997300160',
+  '240820076000', // Exemple de numéro 4
   // Ajoutez d'autres numéros selon vos besoins
 ];
 
 // Numéro Signal défini dans l'API
-const phoneNumber = '243819875159'; // Exemple de numéro source
+const phoneNumber = '240819871525'; // Exemple de numéro source
 
 export const sendMessage = async (req: Request, res: Response): Promise<void> => {
   const { message } = req.body; // Ne prendre que le message, les numéros sont gérés côté API
