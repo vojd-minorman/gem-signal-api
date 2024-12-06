@@ -36,7 +36,6 @@ Réponse réussie (status HTTP 200) :
 
 #### Exemple de réponse :
 ```json
-Copier le code
 {
   "status": "success",
   "message": "Message envoyé avec succès!"
@@ -47,7 +46,6 @@ Copier le code
 Exemple de réponse :
 
 ```json
-Copier le code
 {
   "status": "error",
   "error": "Message trop court"
